@@ -32,7 +32,7 @@ const data: User[] = [
     {
         id: 'm5gr84i9',
         amount: 316,
-        status: 'success',
+        status: 'blocked',
         email: 'ken99@yahoo.com',
         username: 'kedfdsan99',
         following: 150,
@@ -42,7 +42,7 @@ const data: User[] = [
     {
         id: 'm5gr84i9',
         amount: 316,
-        status: 'success',
+        status: 'blocked',
         email: 'sdfsaf@yahoo.com',
         username: 'ken99',
         following: 150,
@@ -52,7 +52,7 @@ const data: User[] = [
     {
         id: 'm5gr84i9',
         amount: 316,
-        status: 'success',
+        status: 'active',
         email: 'kensadfasdf99@yahoo.com',
         username: 'ken99',
         following: 150,
@@ -64,7 +64,7 @@ const data: User[] = [
 export type User = {
     id: string;
     amount: number;
-    status: 'pending' | 'processing' | 'success' | 'failed';
+    status: 'active' | 'blocked';
     email: string;
     username: string;
     following: number;

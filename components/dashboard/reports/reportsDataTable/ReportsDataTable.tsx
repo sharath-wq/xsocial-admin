@@ -42,7 +42,6 @@ const data: Report[] = [
         authorUsername: 'username',
         reportCount: 8,
     },
-    // Add more report data as needed
 ];
 
 export type Report = {
