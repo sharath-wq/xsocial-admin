@@ -1,12 +1,11 @@
 export type User = {
     id: string;
-    amount: number;
-    status: 'active' | 'blocked';
     email: string;
     username: string;
     following: number;
     followers: number;
     posts: number;
+    isBlocked: boolean;
 };
 
 export type UserData = {
@@ -23,4 +22,5 @@ export type UserData = {
     savedPosts: string[];
     username: string;
     verified: boolean;
+    isBlocked: boolean;
 };

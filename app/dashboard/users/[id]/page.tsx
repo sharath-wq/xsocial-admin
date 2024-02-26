@@ -23,6 +23,7 @@ const page = () => {
         try {
             const { data } = await axios.get(`/api/users/${id}`);
             setUser(data);
+            setIsBlocked(data.isBlocked);
         } catch (e) {
             const error = e as AxiosError;
         }
@@ -67,7 +68,7 @@ const page = () => {
                         </div>
                     </CardContent>
                     <CardFooter className='flex justify-between'>
-                        <Actions />
+                        <Actions isBlocked={isBlocked} userId={user.id} />
                     </CardFooter>
                 </Card>
             </div>

@@ -1,9 +1,10 @@
 'use client';
 
+// Import necessary components and modules
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/user.context';
 import Navbar from '@/components/dashboard/navbar/Navbar';
 import Sidebar from '@/components/dashboard/sidebar/Sidebar';
-import { useUser } from '@/context/user.context';
-import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
 const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
@@ -11,8 +12,12 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     const router = useRouter();
 
     useEffect(() => {
-        if (!currentUser || !currentUser.isAdmin) {
-            router.replace('/login');
+        if (!currentUser) {
+            router.push('/login');
+        } else {
+            if (!currentUser.isAdmin) {
+                router.push('/forbidden');
+            }
         }
     }, [router, currentUser]);
 

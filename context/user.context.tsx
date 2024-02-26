@@ -9,6 +9,7 @@ interface UserContextType {
         username: string;
         isAdmin: boolean;
         imageUrl: string;
+        isBlocked: boolean;
         iat: number;
     } | null;
     getCurrentUser: () => Promise<void>;

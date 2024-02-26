@@ -55,7 +55,14 @@ export const columns: ColumnDef<User>[] = [
     {
         accessorKey: 'status',
         header: 'Status',
-        cell: ({ row }) => <div className='capitalize'>{row.getValue('status')}</div>,
+        cell: ({ row }) => {
+            const isBlocked = row.original.isBlocked;
+            return (
+                <div className={`capitalize ${isBlocked ? 'text-red-500' : 'text-green-500'}`}>
+                    {isBlocked ? 'Blocked' : 'Active'}
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'email',
