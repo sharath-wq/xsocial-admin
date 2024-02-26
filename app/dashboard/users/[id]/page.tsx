@@ -33,8 +33,6 @@ const page = () => {
         getUsers();
     }, []);
 
-    console.log(user);
-
     return (
         user && (
             <div className='p-5 rounded-xl mt-5 flex justify-center'>
