@@ -1,9 +1,22 @@
+'use client';
+
 import Navbar from '@/components/dashboard/navbar/Navbar';
 import Sidebar from '@/components/dashboard/sidebar/Sidebar';
-import React from 'react';
+import { useUser } from '@/context/user.context';
+import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 
 const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
-    return (
+    const { currentUser } = useUser();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!currentUser || !currentUser.isAdmin) {
+            router.replace('/login');
+        }
+    }, [router, currentUser]);
+
+    return currentUser ? (
         <div className='flex flex-[1]'>
             <div className='flex-[1] p-5 min-h-screen'>
                 <Sidebar />
@@ -13,6 +26,8 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
                 {children}
             </div>
         </div>
+    ) : (
+        <div>Loading...</div>
     );
 };
 
