@@ -27,50 +27,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-const data: User[] = [
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'blocked',
-        email: 'ken99@yahoo.com',
-        username: 'kedfdsan99',
-        following: 150,
-        followers: 200,
-        posts: 50,
-    },
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'blocked',
-        email: 'sdfsaf@yahoo.com',
-        username: 'ken99',
-        following: 150,
-        followers: 200,
-        posts: 50,
-    },
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'active',
-        email: 'kensadfasdf99@yahoo.com',
-        username: 'ken99',
-        following: 150,
-        followers: 200,
-        posts: 50,
-    },
-];
-
-export type User = {
-    id: string;
-    amount: number;
-    status: 'active' | 'blocked';
-    email: string;
-    username: string;
-    following: number;
-    followers: number;
-    posts: number;
-};
+import axios, { AxiosError } from 'axios';
+import { User, UserData } from '@/types/user';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export const columns: ColumnDef<User>[] = [
     {
@@ -173,11 +133,13 @@ export const columns: ColumnDef<User>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => console.log('Block user:', user.username)}>Block</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => console.log('Deactivate user:', user.username)}>
+                        {/* <DropdownMenuItem onClick={() => console.log('Block user:', user.username)}>Block</DropdownMenuItem> */}
+                        {/* <DropdownMenuItem onClick={() => console.log('Deactivate user:', user.username)}>
                             Deactivate
+                        </DropdownMenuItem> */}
+                        <DropdownMenuItem onClick={() => console.log('View user details:', user)}>
+                            <Link href={`/dashboard/users/${user.id}`}>View</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => console.log('View user details:', user)}>View</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -185,14 +147,41 @@ export const columns: ColumnDef<User>[] = [
     },
 ];
 
+const adjustUserData = (usersData: UserData[]): User[] => {
+    const adjustedUsers = usersData.map((user) => ({
+        ...user,
+        following: user.following.length,
+        followers: user.followers.length,
+        posts: user.posts.length,
+    }));
+
+    return adjustedUsers;
+};
+
 export default function DataTableDemo() {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
+    const [users, setUsers] = React.useState<User[]>();
+
+    const getUsers = async () => {
+        try {
+            const { data } = await axios.get('/api/users');
+            const adjustedUsers = adjustUserData(data);
+            setUsers(adjustedUsers);
+        } catch (e) {
+            const error = e as AxiosError;
+        }
+    };
+
+    useEffect(() => {
+        getUsers();
+    }, []);
+
     const table = useReactTable({
-        data,
+        data: users || [],
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
