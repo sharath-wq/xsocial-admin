@@ -23,4 +23,25 @@ export type UserData = {
     username: string;
     verified: boolean;
     isBlocked: boolean;
+    reportedBy: string[];
+};
+
+export type UserReport = {
+    timestamp: string;
+    userId: string;
+    reporterId: string;
+    reason: string;
+    actionTaken: string;
+    id: string;
+    imageUrl: string;
+    username: string;
+    reportedBy: string;
+};
+
+export type Report = {
+    timestamp: Date;
+    userId: string;
+    reporterId: string;
+    reason: string;
+    actionTaken: string;
 };

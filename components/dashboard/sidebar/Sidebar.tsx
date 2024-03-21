@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Headset, LayoutDashboard, LogOut, Settings, Users } from 'lucide-react';
+import { ImageOff, LayoutDashboard, LogOut, UserX, Users } from 'lucide-react';
 import Admin from '../navbar/admin/Admin';
 import MenuLink from '../navbar/menuLink/MenuLink';
 import { Button } from '@/components/ui/button';
@@ -24,31 +24,36 @@ const menuItems = [
                 path: '/dashboard/users',
                 icon: <Users />,
             },
-            {
-                title: 'Support',
-                path: '/dashboard/support',
-                icon: <Headset />,
-            },
+            // {
+            //     title: 'Support',
+            //     path: '/dashboard/support',
+            //     icon: <Headset />,
+            // },
         ],
     },
     {
         title: 'Analytics',
         list: [
             {
-                title: 'Reports',
-                path: '/dashboard/reports',
-                icon: <AlertTriangle />,
+                title: 'Post Reports',
+                path: '/dashboard/post-reports',
+                icon: <ImageOff />,
+            },
+            {
+                title: 'User Reports',
+                path: '/dashboard/user-reports',
+                icon: <UserX />,
             },
         ],
     },
     {
         title: 'User',
         list: [
-            {
-                title: 'Settings',
-                path: '/dashboard/settings',
-                icon: <Settings />,
-            },
+            // {
+            //     title: 'Settings',
+            //     path: '/dashboard/settings',
+            //     icon: <Settings />,
+            // },
         ],
     },
 ];

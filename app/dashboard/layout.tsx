@@ -6,6 +6,7 @@ import { useUser } from '@/context/user.context';
 import Navbar from '@/components/dashboard/navbar/Navbar';
 import Sidebar from '@/components/dashboard/sidebar/Sidebar';
 import React, { useEffect } from 'react';
+import { Loader } from 'lucide-react';
 
 const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     const { currentUser } = useUser();
@@ -32,7 +33,9 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             </div>
         </div>
     ) : (
-        <div>Loading...</div>
+        <div className='w-full h-screen flex justify-center items-center'>
+            <Loader className='animate-spin' />
+        </div>
     );
 };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useUser } from '@/context/user.context';
+import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -16,5 +17,9 @@ export default function Home() {
         }
     }, [router, currentUser]);
 
-    return <main>Home</main>;
+    return (
+        <div className='w-full h-screen flex justify-center items-center'>
+            <Loader className='animate-spin' />
+        </div>
+    );
 }
