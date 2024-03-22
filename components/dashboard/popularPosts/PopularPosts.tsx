@@ -1,60 +1,55 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { UserData } from '@/types/user';
-import axios, { AxiosError } from 'axios';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
+import Link from 'next/link';
+import React from 'react';
 
-const PopularPosts = () => {
-    const [users, setUsers] = React.useState<UserData[]>();
-
-    const getUsers = async () => {
-        try {
-            const { data } = await axios.get(`/api/users/`);
-            setUsers(data);
-        } catch (e) {
-            const error = e as AxiosError;
-        }
-    };
-
-    useEffect(() => {
-        getUsers();
-    }, []);
-
+const PopularPosts = ({ data }: { data: any[] }) => {
     return (
         <div className='bg-secondary p-5 rounded-xl'>
             <h2 className='mb-5 font-extralight'>Popular Posts</h2>
             <table className='w-full'>
                 <thead>
                     <tr>
+                        <td className='p-3'>Post</td>
+                        <td className='p-3'>User</td>
                         <td className='p-3'>Username</td>
-                        <td className='p-3'>Status</td>
-                        <td className='p-3'>Date</td>
+                        <td className='p-3'>Likes</td>
+                        <td className='p-3'>Comments</td>
                     </tr>
                 </thead>
                 <tbody>
-                    {users &&
-                        users.map((user) => (
+                    {data &&
+                        data.map((post) => (
                             <tr>
                                 <td className='p-3'>
-                                    <div className='flex gap-3 items-center'>
+                                    <Link href={`/dashboard/posts/${post.id}`} className='flex gap-3 items-center'>
                                         <Image
-                                            src={user.imageUrl}
-                                            alt=''
+                                            src={post.imageUrls[0]}
+                                            alt='post'
+                                            width={60}
+                                            height={60}
+                                            className='object-cover'
+                                        />
+                                    </Link>
+                                </td>
+                                <td className='p-3'>
+                                    <Link
+                                        href={`/dashboard/users/${post.author.userId}`}
+                                        className='flex gap-3 items-center'
+                                    >
+                                        <Image
+                                            src={post.author.imageUrl}
+                                            alt='post'
                                             width={40}
                                             height={40}
                                             className='object-cover rounded-full'
                                         />
-                                        {user.username}
-                                    </div>
+                                    </Link>
                                 </td>
-                                <td className='p-3'>
-                                    <Badge variant={`${user.isBlocked ? 'destructive' : 'default'}`}>
-                                        {user.isBlocked ? 'Blocked' : 'Active'}
-                                    </Badge>
-                                </td>
-                                <td className='p-3'>{user.createdAt}</td>
+                                <td className='p-3'>{post.author.username}</td>
+                                <td className='p-3'>{post.likes.length}</td>
+                                <td className='p-3'>{post.comments.length}</td>
                             </tr>
                         ))}
                 </tbody>
