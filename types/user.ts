@@ -35,7 +35,24 @@ export type UserReport = {
     id: string;
     imageUrl: string;
     username: string;
-    reportedBy: string;
+    reportedBy: string[];
+};
+
+export type PostReport = {
+    timestamp: string;
+    userId: string;
+    id: string;
+    reason: string;
+    actionTaken: string;
+    postId: string;
+    reportId: string;
+    imageUrls: string[];
+    author: {
+        userId: string;
+        username: string;
+        imageUrl: string;
+    };
+    reportedBy: string[];
 };
 
 export type Report = {

@@ -34,7 +34,7 @@ import { toast } from '@/components/ui/use-toast';
 export type Report = {
     id: string;
     posts: React.ReactNode;
-    authorUsername: string;
+    username: string;
     reportCount: number;
     reason: string;
     actionTaken: string;
@@ -62,7 +62,7 @@ export default function DataTableDemo() {
                         className='object-cover rounded-full'
                     />
                 ),
-                authorUsername: item.username,
+                username: item.username,
                 reason: item.reason,
                 actionTaken: item.actionTaken,
             }));
@@ -91,7 +91,7 @@ export default function DataTableDemo() {
             cell: ({ row }) => <div>{row.getValue('user')}</div>,
         },
         {
-            accessorKey: 'authorUsername',
+            accessorKey: 'username',
             header: ({ column }) => {
                 return (
                     <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
@@ -100,7 +100,7 @@ export default function DataTableDemo() {
                     </Button>
                 );
             },
-            cell: ({ row }) => <div className='capitalize'>{row.getValue('authorUsername')}</div>,
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('username')}</div>,
         },
         {
             accessorKey: 'reason',
@@ -199,9 +199,9 @@ export default function DataTableDemo() {
         <div className='w-full'>
             <div className='flex items-center py-4'>
                 <Input
-                    placeholder='Filter emails...'
-                    value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+                    placeholder='Username...'
+                    value={(table.getColumn('username')?.getFilterValue() as string) ?? ''}
+                    onChange={(event) => table.getColumn('username')?.setFilterValue(event.target.value)}
                     className='max-w-sm'
                 />
                 <DropdownMenu>

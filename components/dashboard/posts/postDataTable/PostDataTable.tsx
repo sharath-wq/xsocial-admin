@@ -16,6 +16,7 @@ import {
 } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -27,20 +28,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import axios, { AxiosError } from 'axios';
-import { PostReport } from '@/types/user';
-import Image from 'next/image';
 import Link from 'next/link';
-import { toast } from '@/components/ui/use-toast';
+import { useEffect } from 'react';
+import { Post, PostModel } from '@/types/post';
+import Image from 'next/image';
 
-export type Report = {
-    id: string;
-    userId: string;
-    postId: string;
-    post: React.ReactNode;
-    author: React.ReactNode;
-    reportCount: number;
-    reason: string;
-    actionTaken: string;
+const adjustPosts = (postData: PostModel[]): Post[] => {
+    const adjustedPosts = postData.map((post) => ({
+        ...post,
+        username: post.author.username,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        reportedBy: post.reportedBy.length,
+        isDeleted: post.isDeleted,
+    }));
+
+    return adjustedPosts;
 };
 
 export default function DataTableDemo() {
@@ -49,70 +52,67 @@ export default function DataTableDemo() {
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
-    const [data, setData] = React.useState<Report[]>([]);
+    const [posts, setPosts] = React.useState<Post[]>();
 
-    const getReportedPosts = async () => {
+    const handleVisibility = async (id: string, isDeleted: boolean) => {
         try {
-            const { data } = await axios.get('/api/posts/reports');
-            const reportData = data.map((item: PostReport) => ({
-                id: item.id,
-                postId: item.postId,
-                userId: item.author.userId,
-                post: (
-                    <Link href={`/dashboard/posts/${item.postId}`}>
-                        <Image src={item.imageUrls[0]} alt='Image' width={50} height={50} className='object-cover' />
-                    </Link>
-                ),
-                author: (
-                    <Link href={`/dashboard/users/${item.author.userId}`}>
-                        <Image
-                            src={item.author.imageUrl}
-                            alt={item.author.username}
-                            width={50}
-                            height={50}
-                            className='object-cover rounded-full'
-                        />
-                    </Link>
-                ),
-                reason: item.reason,
-                username: item.author.username,
-                actionTaken: item.actionTaken,
-            }));
-            setData(reportData);
+            const { data } = await axios.patch(`/api/posts/${id}`, {
+                isDeleted: !isDeleted,
+            });
+
+            setPosts((prevPosts: any) => {
+                return prevPosts.map((post: any) => {
+                    if (post.id === id) {
+                        return { ...post, isDeleted: !isDeleted };
+                    }
+                    return post;
+                });
+            });
         } catch (e) {
             const error = e as AxiosError;
-            setData([]);
+            console.log(error);
         }
     };
 
-    React.useEffect(() => {
-        getReportedPosts();
-    }, []);
-
-    const columns: ColumnDef<Report>[] = [
+    const columns: ColumnDef<Post>[] = [
         {
-            accessorKey: 'post',
-            header: ({ column }) => {
-                return (
-                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Post
-                        <CaretSortIcon className='ml-2 h-4 w-4' />
-                    </Button>
-                );
-            },
-            cell: ({ row }) => <div>{row.getValue('post')}</div>,
+            id: 'select',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label='Select all'
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label='Select row'
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
         },
         {
-            accessorKey: 'author',
-            header: ({ column }) => {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const isHidden = row.original.isDeleted;
                 return (
-                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Author
-                        <CaretSortIcon className='ml-2 h-4 w-4' />
-                    </Button>
+                    <div className={`capitalize cursor-pointer ${isHidden ? 'text-red-500' : 'text-green-500'}`}>
+                        {isHidden ? 'Hidden' : 'Active'}
+                    </div>
                 );
             },
-            cell: ({ row }) => <div className='capitalize'>{row.getValue('author')}</div>,
+        },
+        {
+            accessorKey: 'post',
+            header: 'Post',
+            cell: ({ row }) => {
+                const imageUrls = row.original.imageUrls;
+                return <Image src={imageUrls[0]} alt='Image' width={50} height={50} className='object-cover' />;
+            },
         },
         {
             accessorKey: 'username',
@@ -124,64 +124,49 @@ export default function DataTableDemo() {
                     </Button>
                 );
             },
-            cell: ({ row }) => <div>{row.getValue('username')}</div>,
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('username')}</div>,
         },
         {
-            accessorKey: 'reason',
+            accessorKey: 'likes',
             header: ({ column }) => {
                 return (
                     <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Reason
+                        Likes
                         <CaretSortIcon className='ml-2 h-4 w-4' />
                     </Button>
                 );
             },
-            cell: ({ row }) => <div>{row.getValue('reason')}</div>,
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('likes')}</div>,
         },
         {
-            accessorKey: 'actionTaken',
+            accessorKey: 'comments',
             header: ({ column }) => {
                 return (
                     <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Action Taken
+                        Comments
                         <CaretSortIcon className='ml-2 h-4 w-4' />
                     </Button>
                 );
             },
-            cell: ({ row }) => <div>{row.getValue('actionTaken')}</div>,
+            cell: ({ row }) => <div>{row.getValue('comments')}</div>,
+        },
+        {
+            accessorKey: 'reportedBy',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Report Count
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('reportedBy')}</div>,
         },
         {
             id: 'actions',
             enableHiding: false,
             cell: ({ row }) => {
-                const report = row.original;
-
-                const handleWarning = async () => {
-                    try {
-                        const { data } = await axios.patch(`/api/posts/reports/${report.id}`, {
-                            actionTaken: 'Warning Issued',
-                            userId: report.userId,
-                        });
-                        toast({ title: `Warning Notification send`, description: `Reason: ${report.reason}` });
-                        getReportedPosts();
-                    } catch (error) {
-                        console.log(error);
-                    }
-                };
-
-                const handleRemovePost = async () => {
-                    try {
-                        const { data } = await axios.patch(`/api/posts/reports/${report.id}`, {
-                            actionTaken: 'Post Removed',
-                            userId: report.userId,
-                        });
-                        toast({ title: `User Blocked`, description: `Reason: ${report.reason}` });
-
-                        getReportedPosts();
-                    } catch (error) {
-                        console.log(error);
-                    }
-                };
+                const post = row.original;
 
                 return (
                     <DropdownMenu>
@@ -193,8 +178,18 @@ export default function DataTableDemo() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={handleRemovePost}>Remove Post</DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleWarning}>Send Warning</DropdownMenuItem>
+                            {/* <DropdownMenuItem onClick={() => console.log('Block user:', user.username)}>Block</DropdownMenuItem> */}
+                            {/* <DropdownMenuItem onClick={() => console.log('Deactivate user:', user.username)}>
+                            Deactivate
+                        </DropdownMenuItem> */}
+                            <DropdownMenuItem>
+                                <Link href={`/dashboard/posts/${post.id}`}>View</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <span onClick={() => handleVisibility(post.id, post.isDeleted)}>
+                                    {post.isDeleted ? 'Make Visible' : 'Hide'}
+                                </span>
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 );
@@ -202,8 +197,23 @@ export default function DataTableDemo() {
         },
     ];
 
+    const getUsers = async () => {
+        try {
+            const { data } = await axios.get('/api/posts');
+            const adjustedPosts = adjustPosts(data);
+
+            setPosts(adjustedPosts);
+        } catch (e) {
+            const error = e as AxiosError;
+        }
+    };
+
+    useEffect(() => {
+        getUsers();
+    }, []);
+
     const table = useReactTable({
-        data,
+        data: posts || [],
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -225,7 +235,7 @@ export default function DataTableDemo() {
         <div className='w-full'>
             <div className='flex items-center py-4'>
                 <Input
-                    placeholder='Username...'
+                    placeholder='Filter username...'
                     value={(table.getColumn('username')?.getFilterValue() as string) ?? ''}
                     onChange={(event) => table.getColumn('username')?.setFilterValue(event.target.value)}
                     className='max-w-sm'

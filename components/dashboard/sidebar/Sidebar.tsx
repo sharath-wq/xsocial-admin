@@ -1,6 +1,6 @@
 'use client';
 
-import { ImageOff, LayoutDashboard, LogOut, UserX, Users } from 'lucide-react';
+import { ImageOff, Images, LayoutDashboard, LogOut, UserX, Users } from 'lucide-react';
 import Admin from '../navbar/admin/Admin';
 import MenuLink from '../navbar/menuLink/MenuLink';
 import { Button } from '@/components/ui/button';
@@ -24,11 +24,11 @@ const menuItems = [
                 path: '/dashboard/users',
                 icon: <Users />,
             },
-            // {
-            //     title: 'Support',
-            //     path: '/dashboard/support',
-            //     icon: <Headset />,
-            // },
+            {
+                title: 'Posts',
+                path: '/dashboard/posts',
+                icon: <Images />,
+            },
         ],
     },
     {
