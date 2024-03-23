@@ -1,46 +1,14 @@
-'use client';
-
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const data = [
-    {
-        name: 'Sun',
-        visit: 4000,
-        click: 2400,
-    },
-    {
-        name: 'Mon',
-        visit: 3000,
-        click: 1398,
-    },
-    {
-        name: 'Tue',
-        visit: 2000,
-        click: 3800,
-    },
-    {
-        name: 'Wed',
-        visit: 2780,
-        click: 3908,
-    },
-    {
-        name: 'Thu',
-        visit: 1890,
-        click: 4800,
-    },
-    {
-        name: 'Fri',
-        visit: 2390,
-        click: 3800,
-    },
-    {
-        name: 'Sat',
-        visit: 3490,
-        click: 4300,
-    },
-];
+const Chart = ({ data }: { data: any[] }) => {
+    const formattedData = data.map((item) => ({
+        name: item.name,
+        user: item.user,
+        posts: item.posts,
+        userReport: item.userReport,
+        postReport: item.postReport,
+    }));
 
-const Chart = () => {
     return (
         <div className='h-[450px] bg-secondary p-5 rounded-xl'>
             <h2 className='font-extralight mb-5'>Weekly Recap</h2>
@@ -48,7 +16,7 @@ const Chart = () => {
                 <LineChart
                     width={500}
                     height={300}
-                    data={data}
+                    data={formattedData}
                     margin={{
                         top: 5,
                         right: 30,
@@ -60,8 +28,10 @@ const Chart = () => {
                     <YAxis />
                     <Tooltip contentStyle={{ background: '#151c2c', border: 'none' }} />
                     <Legend />
-                    <Line type='monotone' dataKey='visit' stroke='#8884d8' strokeDasharray='5 5' />
-                    <Line type='monotone' dataKey='click' stroke='#82ca9d' strokeDasharray='3 4 5 2' />
+                    <Line type='monotone' dataKey='user' stroke='#8884d8' strokeDasharray='5 5' />
+                    <Line type='monotone' dataKey='posts' stroke='#82ca9d' strokeDasharray='3 4 5 2' />
+                    <Line type='monotone' dataKey='userReport' stroke='#ffc658' strokeDasharray='2 2 6 2' />
+                    <Line type='monotone' dataKey='postReport' stroke='#ff7300' strokeDasharray='1 2 3 4' />
                 </LineChart>
             </ResponsiveContainer>
         </div>

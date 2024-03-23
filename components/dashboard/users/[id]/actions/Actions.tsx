@@ -8,28 +8,49 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
+import useRequest from '@/hooks/useRequest';
+import { useState } from 'react';
+import { ButtonLoading } from '@/components/button/ButtonLoading';
+import { useUser } from '@/context/user.context';
 
 const SingleUserProfileSchema = z.object({
     isBlocked: z.boolean().default(false).optional(),
 });
 
-export function Actions() {
+export function Actions({ userId, isBlocked }: { userId: string; isBlocked: boolean }) {
+    const [isSubmiting, setIsSubmiting] = useState<Boolean>();
+
     const form = useForm<z.infer<typeof SingleUserProfileSchema>>({
         resolver: zodResolver(SingleUserProfileSchema),
         defaultValues: {
-            isBlocked: false,
+            isBlocked: isBlocked,
         },
     });
 
     function onSubmit(data: z.infer<typeof SingleUserProfileSchema>) {
-        toast({
-            description: `User ${data.isBlocked ? 'Blocked' : 'Unblocked'} `,
-        });
+        setIsSubmiting(true);
+        doRequest();
     }
+
+    const { doRequest, errors } = useRequest({
+        url: `/api/users/${form.getValues('isBlocked') ? 'block' : 'unblock'}/${userId}`,
+        method: 'put',
+        body: {},
+        onSuccess: () => {
+            setIsSubmiting(false);
+            toast({
+                description: 'User Updated',
+            });
+        },
+        onError: () => {
+            setIsSubmiting(false);
+        },
+    });
 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='w-full space-y-6'>
+                {errors}
                 <div>
                     <div className='space-y-4'>
                         <FormField
@@ -51,7 +72,7 @@ export function Actions() {
                         />
                     </div>
                 </div>
-                <Button type='submit'>Update</Button>
+                {isSubmiting ? <ButtonLoading /> : <Button type='submit'>Update</Button>}
             </form>
         </Form>
     );

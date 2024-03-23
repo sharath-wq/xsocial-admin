@@ -1,8 +1,14 @@
-import { AlertTriangle, Headset, LayoutDashboard, LogOut, Settings, Users } from 'lucide-react';
+'use client';
+
+import { ImageOff, Images, LayoutDashboard, LogOut, UserX, Users } from 'lucide-react';
 import Admin from '../navbar/admin/Admin';
 import MenuLink from '../navbar/menuLink/MenuLink';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/dark-mode-button';
+import { useUser } from '@/context/user.context';
+import useRequest from '@/hooks/useRequest';
+import { toast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
 
 const menuItems = [
     {
@@ -19,9 +25,9 @@ const menuItems = [
                 icon: <Users />,
             },
             {
-                title: 'Support',
-                path: '/dashboard/support',
-                icon: <Headset />,
+                title: 'Posts',
+                path: '/dashboard/posts',
+                icon: <Images />,
             },
         ],
     },
@@ -29,25 +35,48 @@ const menuItems = [
         title: 'Analytics',
         list: [
             {
-                title: 'Reports',
-                path: '/dashboard/reports',
-                icon: <AlertTriangle />,
+                title: 'Post Reports',
+                path: '/dashboard/post-reports',
+                icon: <ImageOff />,
+            },
+            {
+                title: 'User Reports',
+                path: '/dashboard/user-reports',
+                icon: <UserX />,
             },
         ],
     },
     {
         title: 'User',
         list: [
-            {
-                title: 'Settings',
-                path: '/dashboard/settings',
-                icon: <Settings />,
-            },
+            // {
+            //     title: 'Settings',
+            //     path: '/dashboard/settings',
+            //     icon: <Settings />,
+            // },
         ],
     },
 ];
 
-const Sidebar = async () => {
+const Sidebar = () => {
+    const router = useRouter();
+    const { getCurrentUser } = useUser();
+    const { doRequest } = useRequest({
+        url: '/api/users/logout',
+        method: 'post',
+        body: {},
+        onSuccess: () => {
+            toast({
+                description: 'Logout successful',
+            });
+            getCurrentUser();
+            router.push('/login');
+        },
+    });
+
+    const handleLogout = () => {
+        doRequest();
+    };
     return (
         <div className='sticky top-10'>
             <div className='flex items-center gap-5 mb-5'>
@@ -71,7 +100,7 @@ const Sidebar = async () => {
                 ))}
             </ul>
 
-            <Button variant={'ghost'} className=''>
+            <Button onClick={handleLogout} variant={'ghost'} className=''>
                 <LogOut className='mr-2' />
                 Logout
             </Button>

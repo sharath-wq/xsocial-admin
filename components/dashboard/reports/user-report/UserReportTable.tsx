@@ -16,7 +16,6 @@ import {
 } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -28,97 +27,154 @@ import {
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-
-const data: Report[] = [
-    {
-        id: 'r1',
-        posts: <Image src='https://github.com/shadcn.png' alt='' width={100} height={100} className='object-cover' />,
-        authorUsername: 'username',
-        reportCount: 3,
-    },
-    {
-        id: 'r2',
-        posts: <Image src='https://github.com/shadcn.png' alt='' width={100} height={100} className='object-cover' />,
-        authorUsername: 'username',
-        reportCount: 8,
-    },
-];
+import { UserReport } from '@/types/user';
+import axios, { AxiosError } from 'axios';
+import { toast } from '@/components/ui/use-toast';
 
 export type Report = {
     id: string;
     posts: React.ReactNode;
-    authorUsername: string;
+    username: string;
     reportCount: number;
+    reason: string;
+    actionTaken: string;
 };
-
-export const columns: ColumnDef<Report>[] = [
-    {
-        accessorKey: 'posts',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Posts
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div>{row.getValue('posts')}</div>,
-    },
-    {
-        accessorKey: 'authorUsername',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Author
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className='capitalize'>{row.getValue('authorUsername')}</div>,
-    },
-    {
-        accessorKey: 'reportCount',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Report Count
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div>{row.getValue('reportCount')}</div>,
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const report = row.original;
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                            <span className='sr-only'>Open menu</span>
-                            <DotsHorizontalIcon className='h-4 w-4' />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => console.log('Block report:', report.authorUsername)}>
-                            Remove Post
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
-];
 
 export default function DataTableDemo() {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+
+    const [data, setData] = React.useState<Report[]>([]);
+
+    const getReportedUsers = async () => {
+        try {
+            const { data } = await axios.get('/api/users/reports');
+            const reportData = data.map((item: UserReport) => ({
+                id: item.id,
+                user: (
+                    <Image
+                        src={item.imageUrl}
+                        alt={item.username}
+                        width={50}
+                        height={50}
+                        className='object-cover rounded-full'
+                    />
+                ),
+                username: item.username,
+                reason: item.reason,
+                actionTaken: item.actionTaken,
+            }));
+            setData(reportData);
+        } catch (e) {
+            const error = e as AxiosError;
+            setData([]);
+        }
+    };
+
+    React.useEffect(() => {
+        getReportedUsers();
+    }, []);
+
+    const columns: ColumnDef<Report>[] = [
+        {
+            accessorKey: 'user',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        User
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('user')}</div>,
+        },
+        {
+            accessorKey: 'username',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Username
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('username')}</div>,
+        },
+        {
+            accessorKey: 'reason',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Reason
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('reason')}</div>,
+        },
+        {
+            accessorKey: 'actionTaken',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Action Taken
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('actionTaken')}</div>,
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => {
+                const report = row.original;
+
+                const handleWarning = async () => {
+                    try {
+                        const { data } = await axios.patch(`/api/users/reports/${report.id}`, {
+                            actionTaken: 'Warning Issued',
+                        });
+                        toast({ title: `Warning Notification send`, description: `Reason: ${report.reason}` });
+                        getReportedUsers();
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+
+                const handleBlock = async () => {
+                    try {
+                        const { data } = await axios.patch(`/api/users/reports/${report.id}`, {
+                            actionTaken: 'Account Blocked',
+                        });
+                        toast({ title: `User Blocked`, description: `Reason: ${report.reason}` });
+
+                        getReportedUsers();
+                    } catch (error) {
+                        console.log(error);
+                    }
+                };
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' className='h-8 w-8 p-0'>
+                                <span className='sr-only'>Open menu</span>
+                                <DotsHorizontalIcon className='h-4 w-4' />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={handleWarning}>Send Warning</DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleBlock}>Block User</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ];
 
     const table = useReactTable({
         data,
@@ -143,9 +199,9 @@ export default function DataTableDemo() {
         <div className='w-full'>
             <div className='flex items-center py-4'>
                 <Input
-                    placeholder='Filter emails...'
-                    value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+                    placeholder='Username...'
+                    value={(table.getColumn('username')?.getFilterValue() as string) ?? ''}
+                    onChange={(event) => table.getColumn('username')?.setFilterValue(event.target.value)}
                     className='max-w-sm'
                 />
                 <DropdownMenu>

@@ -28,141 +28,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import axios, { AxiosError } from 'axios';
-import { User, UserData } from '@/types/user';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { Post, PostModel } from '@/types/post';
+import Image from 'next/image';
 
-export const columns: ColumnDef<User>[] = [
-    {
-        id: 'select',
-        header: ({ table }) => (
-            <Checkbox
-                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label='Select all'
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label='Select row'
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => {
-            const isBlocked = row.original.isBlocked;
-            return (
-                <div className={`capitalize ${isBlocked ? 'text-red-500' : 'text-green-500'}`}>
-                    {isBlocked ? 'Blocked' : 'Active'}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'email',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Email
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className='lowercase'>{row.getValue('email')}</div>,
-    },
-    {
-        accessorKey: 'username',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Username
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div className='capitalize'>{row.getValue('username')}</div>,
-    },
-    {
-        accessorKey: 'following',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Following
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div>{row.getValue('following')}</div>,
-    },
-    {
-        accessorKey: 'followers',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Followers
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div>{row.getValue('followers')}</div>,
-    },
-    {
-        accessorKey: 'posts',
-        header: ({ column }) => {
-            return (
-                <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Posts
-                    <CaretSortIcon className='ml-2 h-4 w-4' />
-                </Button>
-            );
-        },
-        cell: ({ row }) => <div>{row.getValue('posts')}</div>,
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const user = row.original;
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                            <span className='sr-only'>Open menu</span>
-                            <DotsHorizontalIcon className='h-4 w-4' />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {/* <DropdownMenuItem onClick={() => console.log('Block user:', user.username)}>Block</DropdownMenuItem> */}
-                        {/* <DropdownMenuItem onClick={() => console.log('Deactivate user:', user.username)}>
-                            Deactivate
-                        </DropdownMenuItem> */}
-                        <DropdownMenuItem onClick={() => console.log('View user details:', user)}>
-                            <Link href={`/dashboard/users/${user.id}`}>View</Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
-];
-
-const adjustUserData = (usersData: UserData[]): User[] => {
-    const adjustedUsers = usersData.map((user) => ({
-        ...user,
-        following: user.following.length,
-        followers: user.followers.length,
-        posts: user.posts.length,
+const adjustPosts = (postData: PostModel[]): Post[] => {
+    const adjustedPosts = postData.map((post) => ({
+        ...post,
+        username: post.author.username,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        reportedBy: post.reportedBy.length,
+        isDeleted: post.isDeleted,
     }));
 
-    return adjustedUsers;
+    return adjustedPosts;
 };
 
 export default function DataTableDemo() {
@@ -171,13 +52,157 @@ export default function DataTableDemo() {
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
-    const [users, setUsers] = React.useState<User[]>();
+    const [posts, setPosts] = React.useState<Post[]>();
+
+    const handleVisibility = async (id: string, isDeleted: boolean) => {
+        try {
+            const { data } = await axios.patch(`/api/posts/${id}`, {
+                isDeleted: !isDeleted,
+            });
+
+            setPosts((prevPosts: any) => {
+                return prevPosts.map((post: any) => {
+                    if (post.id === id) {
+                        return { ...post, isDeleted: !isDeleted };
+                    }
+                    return post;
+                });
+            });
+        } catch (e) {
+            const error = e as AxiosError;
+            console.log(error);
+        }
+    };
+
+    const columns: ColumnDef<Post>[] = [
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label='Select all'
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label='Select row'
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const isHidden = row.original.isDeleted;
+                return (
+                    <div className={`capitalize cursor-pointer ${isHidden ? 'text-red-500' : 'text-green-500'}`}>
+                        {isHidden ? 'Hidden' : 'Active'}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'post',
+            header: 'Post',
+            cell: ({ row }) => {
+                const imageUrls = row.original.imageUrls;
+                return <Image src={imageUrls[0]} alt='Image' width={50} height={50} className='object-cover' />;
+            },
+        },
+        {
+            accessorKey: 'username',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Username
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('username')}</div>,
+        },
+        {
+            accessorKey: 'likes',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Likes
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div className='capitalize'>{row.getValue('likes')}</div>,
+        },
+        {
+            accessorKey: 'comments',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Comments
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('comments')}</div>,
+        },
+        {
+            accessorKey: 'reportedBy',
+            header: ({ column }) => {
+                return (
+                    <Button variant='ghost' onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Report Count
+                        <CaretSortIcon className='ml-2 h-4 w-4' />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => <div>{row.getValue('reportedBy')}</div>,
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => {
+                const post = row.original;
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' className='h-8 w-8 p-0'>
+                                <span className='sr-only'>Open menu</span>
+                                <DotsHorizontalIcon className='h-4 w-4' />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            {/* <DropdownMenuItem onClick={() => console.log('Block user:', user.username)}>Block</DropdownMenuItem> */}
+                            {/* <DropdownMenuItem onClick={() => console.log('Deactivate user:', user.username)}>
+                            Deactivate
+                        </DropdownMenuItem> */}
+                            <DropdownMenuItem>
+                                <Link href={`/dashboard/posts/${post.id}`}>View</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <span onClick={() => handleVisibility(post.id, post.isDeleted)}>
+                                    {post.isDeleted ? 'Make Visible' : 'Hide'}
+                                </span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ];
 
     const getUsers = async () => {
         try {
-            const { data } = await axios.get('/api/users');
-            const adjustedUsers = adjustUserData(data);
-            setUsers(adjustedUsers);
+            const { data } = await axios.get('/api/posts');
+            const adjustedPosts = adjustPosts(data);
+
+            setPosts(adjustedPosts);
         } catch (e) {
             const error = e as AxiosError;
         }
@@ -188,7 +213,7 @@ export default function DataTableDemo() {
     }, []);
 
     const table = useReactTable({
-        data: users || [],
+        data: posts || [],
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
